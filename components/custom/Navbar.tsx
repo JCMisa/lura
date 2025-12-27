@@ -1,9 +1,19 @@
+"use client";
+
 import Link from "next/link";
 import { Highlighter } from "../ui/highlighter";
-import { buttonVariants } from "../ui/button";
+import { Button, buttonVariants } from "../ui/button";
 import { ThemeToggle } from "./ThemeToggle";
+import { useConvexAuth } from "convex/react";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const Navbar = () => {
+  const { isAuthenticated, isLoading } = useConvexAuth();
+
+  const router = useRouter();
+
   return (
     <nav className="w-full py-5 flex items-center justify-between">
       <div className="flex items-center gap-8">
@@ -32,15 +42,39 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center gap-2">
-        <Link href={"/auth/sign-up"} className={buttonVariants()}>
-          Sign up
-        </Link>
-        <Link
-          href={"/auth/sign-in"}
-          className={buttonVariants({ variant: "outline" })}
-        >
-          Sign in
-        </Link>
+        {isLoading ? null : isAuthenticated ? (
+          <Button
+            variant={"destructive"}
+            className="bg-red-600!"
+            onClick={() =>
+              authClient.signOut({
+                fetchOptions: {
+                  onSuccess: () => {
+                    toast.success("Signed out successfully");
+                    router.push("/");
+                  },
+                  onError: (error) => {
+                    toast.error(error.error.message);
+                  },
+                },
+              })
+            }
+          >
+            Sign out
+          </Button>
+        ) : (
+          <>
+            <Link href={"/auth/sign-up"} className={buttonVariants()}>
+              Sign up
+            </Link>
+            <Link
+              href={"/auth/sign-in"}
+              className={buttonVariants({ variant: "outline" })}
+            >
+              Sign in
+            </Link>
+          </>
+        )}
 
         <ThemeToggle />
       </div>

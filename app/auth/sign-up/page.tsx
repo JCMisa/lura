@@ -15,11 +15,21 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
 import { signUpSchema } from "@/schemas/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { LoaderCircleIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import z from "zod";
 
 const SignUpPage = () => {
+  const router = useRouter();
+
+  const [isPending, startTransition] = useTransition();
+
   const form = useForm({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -29,8 +39,23 @@ const SignUpPage = () => {
     },
   });
 
-  const onSubmit = async () => {
-    console.log("form submitted");
+  const onSubmit = (data: z.infer<typeof signUpSchema>) => {
+    startTransition(async () => {
+      await authClient.signUp.email({
+        email: data.email,
+        name: data.name,
+        password: data.password,
+        fetchOptions: {
+          onSuccess: () => {
+            toast.success("Account created successfully");
+            router.push("/");
+          },
+          onError: (error) => {
+            toast.error(error.error.message);
+          },
+        },
+      });
+    });
   };
 
   return (
@@ -101,7 +126,13 @@ const SignUpPage = () => {
               )}
             />
 
-            <Button>Sign up</Button>
+            <Button disabled={isPending}>
+              {isPending ? (
+                <LoaderCircleIcon className="size-4 animate-spin" />
+              ) : (
+                "Sign up"
+              )}
+            </Button>
           </FieldGroup>
         </form>
       </CardContent>
