@@ -18,8 +18,9 @@ import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 import { signUpSchema } from "@/schemas/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useConvexAuth } from "convex/react";
 import { LoaderCircleIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -27,6 +28,11 @@ import z from "zod";
 
 const SignUpPage = () => {
   const router = useRouter();
+
+  const { isAuthenticated } = useConvexAuth();
+  if (isAuthenticated) {
+    redirect("/");
+  }
 
   const [isPending, startTransition] = useTransition();
 
