@@ -5,8 +5,8 @@ import { Suspense } from "react";
 import BlogListFallback from "./_components/BlogListFallback";
 
 const BlogsPage = async () => {
-  const isUserAauthenticated = await isAuthenticated();
-  if (!isUserAauthenticated) {
+  const isUserAuthenticated = await isAuthenticated();
+  if (!isUserAuthenticated) {
     redirect("/auth/sign-in");
   }
 
