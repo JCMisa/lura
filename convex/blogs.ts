@@ -1,6 +1,19 @@
 import { ConvexError, v } from "convex/values";
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { authComponent } from "./auth";
+
+export const getBlogs = query({
+  args: {},
+  handler: async (ctx) => {
+    const data = await ctx.db.query("blogs").order("desc").collect();
+
+    if (data.length > 0) {
+      return data;
+    } else {
+      return [];
+    }
+  },
+});
 
 export const createBlog = mutation({
   args: { title: v.string(), content: v.string() },

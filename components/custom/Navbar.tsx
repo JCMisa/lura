@@ -1,19 +1,12 @@
-"use client";
-
 import Link from "next/link";
 import { Highlighter } from "../ui/highlighter";
-import { Button, buttonVariants } from "../ui/button";
+import { buttonVariants } from "../ui/button";
 import { ThemeToggle } from "./ThemeToggle";
-import { useConvexAuth } from "convex/react";
-import { authClient } from "@/lib/auth-client";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { isAuthenticated } from "@/lib/auth-server";
+import SignOutButton from "./SignOutButton";
 
-const Navbar = () => {
-  const { isAuthenticated, isLoading } = useConvexAuth();
-
-  const router = useRouter();
-
+const Navbar = async () => {
+  const isUserAauthenticated = await isAuthenticated();
   return (
     <nav className="w-full py-5 flex items-center justify-between">
       <div className="flex items-center gap-8">
@@ -29,8 +22,11 @@ const Navbar = () => {
           <Link href={"/"} className={buttonVariants({ variant: "ghost" })}>
             Home
           </Link>
-          <Link href={"/blog"} className={buttonVariants({ variant: "ghost" })}>
-            Blog
+          <Link
+            href={"/blogs"}
+            className={buttonVariants({ variant: "ghost" })}
+          >
+            Blogs
           </Link>
           <Link
             href={"/create"}
@@ -42,26 +38,8 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center gap-2">
-        {isLoading ? null : isAuthenticated ? (
-          <Button
-            variant={"destructive"}
-            className="bg-red-600!"
-            onClick={() =>
-              authClient.signOut({
-                fetchOptions: {
-                  onSuccess: () => {
-                    toast.success("Signed out successfully");
-                    router.push("/");
-                  },
-                  onError: (error) => {
-                    toast.error(error.error.message);
-                  },
-                },
-              })
-            }
-          >
-            Sign out
-          </Button>
+        {isUserAauthenticated ? (
+          <SignOutButton />
         ) : (
           <>
             <Link href={"/auth/sign-up"} className={buttonVariants()}>

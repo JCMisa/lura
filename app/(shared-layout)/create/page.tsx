@@ -51,7 +51,7 @@ const CreatePage = () => {
       if (result) {
         if (result.success) {
           toast.success("Blog created successfully!");
-          router.push("/");
+          router.push("/blogs");
         } else {
           toast.error("Failed to create your blog.");
         }
