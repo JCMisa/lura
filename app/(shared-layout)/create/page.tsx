@@ -14,6 +14,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { FileUpload } from "@/components/ui/file-upload";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { createBlogAction } from "@/lib/actions/blogs";
@@ -41,6 +42,7 @@ const CreatePage = () => {
     defaultValues: {
       title: "",
       content: "",
+      image: undefined,
     },
   });
 
@@ -53,7 +55,7 @@ const CreatePage = () => {
           toast.success("Blog created successfully!");
           router.push("/blogs");
         } else {
-          toast.error("Failed to create your blog.");
+          toast.error(result.error);
         }
       } else {
         toast.error("No result found.");
@@ -112,6 +114,21 @@ const CreatePage = () => {
                       placeholder="Enter the content of your blog..."
                       {...field}
                     />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              {/* image */}
+              <Controller
+                name="image"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field>
+                    <FieldLabel>Blog Image</FieldLabel>
+                    <FileUpload onChange={field.onChange} />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}

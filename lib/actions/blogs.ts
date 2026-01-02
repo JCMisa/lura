@@ -25,26 +25,51 @@ export const getBlogsAction = unstable_cache(
 );
 
 export const createBlogAction = async (values: z.infer<typeof blogSchema>) => {
-  const parsed = blogSchema.safeParse(values);
-  if (!parsed.success) {
-    throw new Error("Something went wrong");
+  try {
+    const parsed = blogSchema.safeParse(values);
+    if (!parsed.success) {
+      throw new Error("Something went wrong");
+    }
+
+    const token = await getToken();
+
+    const imageUrlEndpoint = await fetchMutation(
+      api.blogs.generateImageUploadUrl,
+      {},
+      { token }
+    );
+
+    const uploadResult = await fetch(imageUrlEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": parsed.data.image.type,
+      },
+      body: parsed.data.image,
+    });
+
+    if (!uploadResult.ok) {
+      return { success: false, data: null, error: "Failed to upload image" };
+    }
+
+    const { storageId } = await uploadResult.json();
+
+    const data = await fetchMutation(
+      api.blogs.createBlog,
+      {
+        title: parsed.data.title,
+        content: parsed.data.content,
+        imageStorageId: storageId,
+      },
+      { token }
+    );
+
+    if (!data) {
+      return { success: false, data: null, error: "Failed to create blog" };
+    }
+
+    revalidateTag("blogs", "");
+    return { success: true, data: data };
+  } catch {
+    return { success: false, data: null, error: "Something went wrong" };
   }
-
-  const token = await getToken();
-
-  const data = await fetchMutation(
-    api.blogs.createBlog,
-    {
-      title: parsed.data.title,
-      content: parsed.data.content,
-    },
-    { token }
-  );
-
-  if (!data) {
-    return { success: false, data: null };
-  }
-
-  revalidateTag("blogs", "");
-  return { success: true, data: data };
 };

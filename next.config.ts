@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         port: "",
       },
+      {
+        hostname: "marvelous-malamute-397.convex.cloud",
+        protocol: "https",
+        port: "",
+      },
     ],
   },
 };

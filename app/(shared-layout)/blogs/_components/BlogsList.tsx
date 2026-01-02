@@ -4,7 +4,7 @@ import BlogCard from "./BlogCard";
 
 const BlogsList = async () => {
   // Simulate a slow page load by adding an artificial delay
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  // await new Promise((resolve) => setTimeout(resolve, 5000));
 
   const blogs = await getBlogsAction();
 
