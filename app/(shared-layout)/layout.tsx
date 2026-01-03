@@ -1,10 +1,13 @@
 import Navbar from "@/components/custom/Navbar";
-import React from "react";
+import { NavbarFallback } from "@/components/custom/NavbarFallback";
+import React, { Suspense } from "react";
 
 const SharedLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
-      <Navbar />
+      <Suspense fallback={<NavbarFallback />}>
+        <Navbar />
+      </Suspense>
       {children}
     </>
   );

@@ -1,10 +1,17 @@
 import EmptyPage from "@/components/custom/EmptyPage";
 import { getBlogsAction } from "@/lib/actions/blogs";
 import BlogCard from "./BlogCard";
+import { isAuthenticated } from "@/lib/auth-server";
+import { redirect } from "next/navigation";
 
 const BlogsList = async () => {
   // Simulate a slow page load by adding an artificial delay
   // await new Promise((resolve) => setTimeout(resolve, 5000));
+
+  const isUserAuthenticated = await isAuthenticated();
+  if (!isUserAuthenticated) {
+    redirect("/auth/sign-in");
+  }
 
   const blogs = await getBlogsAction();
 

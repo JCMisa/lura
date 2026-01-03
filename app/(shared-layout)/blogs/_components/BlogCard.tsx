@@ -18,7 +18,7 @@ const BlogCard = ({ blog }: BlogCardProps) => {
         <Image
           src={
             blog.imageUrl ??
-            "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80"
+            "https://images.pexels.com/photos/35163027/pexels-photo-35163027.jpeg"
           }
           alt={blog.title}
           fill

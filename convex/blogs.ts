@@ -31,7 +31,7 @@ export const createBlog = mutation({
   args: {
     title: v.string(),
     content: v.string(),
-    imageStorageId: v.id("_storage"),
+    imageStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     // check if user is authenticated before creating a blog

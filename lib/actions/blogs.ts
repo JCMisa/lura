@@ -5,60 +5,68 @@ import z from "zod";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { getToken } from "../auth-server";
-import { revalidateTag, unstable_cache } from "next/cache";
+import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 
-export const getBlogsAction = unstable_cache(
-  async () => {
+export const getBlogsAction = async () => {
+  "use cache";
+
+  cacheTag("blogs");
+  cacheLife("hours");
+
+  try {
     const data = await fetchQuery(api.blogs.getBlogs);
-
-    if (data.length > 0) {
+    if (data?.length > 0) {
       return { success: true, data: data };
     }
-
     return { success: false, data: [] };
-  },
-  ["all-blogs"], // Key parts (cache tag)
-  {
-    revalidate: 3600, // Cache for 1 hour (adjust as needed)
-    tags: ["blogs"], // Tag for manual revalidation later
+  } catch (error) {
+    console.error("Failed to fetch blogs:", error);
+    return { success: false, data: [] };
   }
-);
+};
 
 export const createBlogAction = async (values: z.infer<typeof blogSchema>) => {
   try {
     const parsed = blogSchema.safeParse(values);
     if (!parsed.success) {
-      throw new Error("Something went wrong");
+      throw new Error("Invalid input");
     }
 
     const token = await getToken();
+    let storageId = undefined;
 
-    const imageUrlEndpoint = await fetchMutation(
-      api.blogs.generateImageUploadUrl,
-      {},
-      { token }
-    );
+    // CHECK: Only proceed with upload if an image exists and has size
+    if (parsed.data.image && parsed.data.image.size > 0) {
+      // 1. Generate Upload URL (Only if we have an image)
+      const imageUrlEndpoint = await fetchMutation(
+        api.blogs.generateImageUploadUrl,
+        {},
+        { token }
+      );
 
-    const uploadResult = await fetch(imageUrlEndpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": parsed.data.image.type,
-      },
-      body: parsed.data.image,
-    });
+      // 2. Upload the file
+      const uploadResult = await fetch(imageUrlEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": parsed.data.image.type },
+        body: parsed.data.image,
+      });
 
-    if (!uploadResult.ok) {
-      return { success: false, data: null, error: "Failed to upload image" };
+      if (!uploadResult.ok) {
+        return { success: false, data: null, error: "Failed to upload image" };
+      }
+
+      // 3. Get the Storage ID
+      storageId = await uploadResult.json();
     }
 
-    const { storageId } = await uploadResult.json();
-
+    // 4. Create Blog
+    // If no image was uploaded, storageId remains 'undefined', which Convex accepts
     const data = await fetchMutation(
       api.blogs.createBlog,
       {
         title: parsed.data.title,
         content: parsed.data.content,
-        imageStorageId: storageId,
+        imageStorageId: storageId ?? undefined,
       },
       { token }
     );
@@ -67,9 +75,10 @@ export const createBlogAction = async (values: z.infer<typeof blogSchema>) => {
       return { success: false, data: null, error: "Failed to create blog" };
     }
 
-    revalidateTag("blogs", "");
+    revalidateTag("blogs", "max");
     return { success: true, data: data };
-  } catch {
+  } catch (error) {
+    console.error(error);
     return { success: false, data: null, error: "Something went wrong" };
   }
 };

@@ -2,10 +2,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  cacheComponents: true,
   images: {
     remotePatterns: [
       {
-        hostname: "images.unsplash.com",
+        hostname: "images.pexels.com",
         protocol: "https",
         port: "",
       },

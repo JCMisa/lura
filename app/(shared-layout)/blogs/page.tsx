@@ -1,15 +1,8 @@
-import { isAuthenticated } from "@/lib/auth-server";
-import { redirect } from "next/navigation";
 import BlogsList from "./_components/BlogsList";
 import { Suspense } from "react";
 import BlogListFallback from "./_components/BlogListFallback";
 
-const BlogsPage = async () => {
-  const isUserAuthenticated = await isAuthenticated();
-  if (!isUserAuthenticated) {
-    redirect("/auth/sign-in");
-  }
-
+const BlogsPage = () => {
   return (
     <div className="py-12">
       <div className="text-center pb-12">
