@@ -20,7 +20,7 @@ const BlogsList = async () => {
       <div className="flex items-center justify-center mt-32 flex-col">
         <EmptyPage />
         <h1 className="tracking-tight font-extrabold text-4xl mt-5">
-          No Blog Found.
+          No Blogs Found.
         </h1>
       </div>
     );
