@@ -2,6 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { authComponent } from "./auth";
 
+// ------------------------------------ get all blogs ------------------------------------
 export const getBlogs = query({
   args: {},
   handler: async (ctx) => {
@@ -26,7 +27,9 @@ export const getBlogs = query({
     }
   },
 });
+// ------------------------------------ get all blogs ------------------------------------
 
+// ------------------------------------ get blog by id ------------------------------------
 export const getBlogById = query({
   args: { blogId: v.id("blogs") },
   handler: async (ctx, args) => {
@@ -47,7 +50,9 @@ export const getBlogById = query({
     };
   },
 });
+// ------------------------------------ get blog by id ------------------------------------
 
+// ------------------------------------ create blog ------------------------------------
 export const createBlog = mutation({
   args: {
     title: v.string(),
@@ -72,7 +77,9 @@ export const createBlog = mutation({
     return data;
   },
 });
+// ------------------------------------ create blog ------------------------------------
 
+// ------------------------------------ image url generation ------------------------------------
 export const generateImageUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
@@ -86,3 +93,41 @@ export const generateImageUploadUrl = mutation({
     return await ctx.storage.generateUploadUrl();
   },
 });
+// ------------------------------------ image url generation ------------------------------------
+
+// ------------------------------------ delete blog ------------------------------------
+export const deleteBlog = mutation({
+  args: { blogId: v.id("blogs") },
+  handler: async (ctx, args) => {
+    const user = await authComponent.safeGetAuthUser(ctx);
+    if (!user) {
+      throw new ConvexError("Not Authenticated");
+    }
+
+    const blog = await ctx.db.get(args.blogId);
+    if (!blog) {
+      throw new ConvexError("Blog not found");
+    }
+
+    // 1. Delete associated comments
+    const comments = await ctx.db
+      .query("comments")
+      .filter((q) => q.eq(q.field("blogId"), args.blogId))
+      .collect();
+
+    for (const comment of comments) {
+      await ctx.db.delete(comment._id);
+    }
+
+    // 2. Delete the image from Convex Storage
+    if (blog.imageStorageId) {
+      await ctx.storage.delete(blog.imageStorageId);
+    }
+
+    // 3. Delete the blog document
+    await ctx.db.delete(args.blogId);
+
+    return { success: true };
+  },
+});
+// ------------------------------------ delete blog ------------------------------------

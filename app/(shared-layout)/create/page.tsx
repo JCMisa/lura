@@ -52,6 +52,7 @@ const CreatePage = () => {
 
       if (result) {
         if (result.success) {
+          form.reset();
           toast.success("Blog created successfully!");
           router.push("/blogs");
         } else {

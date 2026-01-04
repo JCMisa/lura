@@ -6,6 +6,7 @@ import { fetchMutation, fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import { getToken } from "../auth-server";
 import { cacheLife, cacheTag, revalidateTag } from "next/cache";
+import { Id } from "@/convex/_generated/dataModel";
 
 export const getBlogsAction = async () => {
   "use cache";
@@ -56,7 +57,8 @@ export const createBlogAction = async (values: z.infer<typeof blogSchema>) => {
       }
 
       // 3. Get the Storage ID
-      storageId = await uploadResult.json();
+      const { storageId: uploadedId } = await uploadResult.json();
+      storageId = uploadedId;
     }
 
     // 4. Create Blog
@@ -66,7 +68,7 @@ export const createBlogAction = async (values: z.infer<typeof blogSchema>) => {
       {
         title: parsed.data.title,
         content: parsed.data.content,
-        imageStorageId: storageId ?? undefined,
+        imageStorageId: storageId,
       },
       { token }
     );
@@ -80,5 +82,21 @@ export const createBlogAction = async (values: z.infer<typeof blogSchema>) => {
   } catch (error) {
     console.error(error);
     return { success: false, data: null, error: "Something went wrong" };
+  }
+};
+
+// actions/blogs.ts
+export const deleteBlogAction = async (blogId: Id<"blogs">) => {
+  try {
+    const token = await getToken();
+
+    await fetchMutation(api.blogs.deleteBlog, { blogId }, { token });
+
+    revalidateTag("blogs", "max");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Delete failed:", error);
+    return { success: false, error: "Failed to delete blog" };
   }
 };
